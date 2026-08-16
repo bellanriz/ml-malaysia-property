@@ -6,7 +6,7 @@ model = joblib.load('models/best_model.pkl')
 scaler = joblib.load ('models/scaler.pkl')
 
 print("Model loaded succesfully!")
-print (f"Model type: {type(model)._name_}")
+print (f"Model type: {type(model).__name__}")
 
 # ============================================================
 # 2. DEFINE A NEW PROPERTY TO PREDICT
