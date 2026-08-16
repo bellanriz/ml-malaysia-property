@@ -16,7 +16,7 @@ feature_cols = ['Location_encoded', 'Rooms', 'Bathrooms', 'Car Parks',
                 'Property Type_encoded', 'Size', 'Furnishing_encoded']
 
 X = df[feature_cols]
-y = df['Price']
+y = df['Price_log']  # Use log-transformed price for better results
 
 # Split into train/test
 X_train, X_test, y_train, y_test = train_test_split(

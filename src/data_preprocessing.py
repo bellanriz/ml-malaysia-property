@@ -1,9 +1,9 @@
 """
-Step 2: Data Preprocessing
-- Clean Price, Size, Rooms columns (extract numbers from text)
-- Handle missing values
-- Encode categorical variables
-- Split into train/test sets
+Step 2: Data Preprocessing (Improved)
+- Clean Price, Size, Rooms columns
+- Remove extreme outliers
+- Log-transform Price (handles skewed distribution)
+- Use better encoding for Location
 """
 import pandas as pd
 import numpy as np
@@ -35,15 +35,25 @@ df['Rooms'] = df['Rooms'].fillna(df['Rooms'].median())
 df['Furnishing'] = df['Furnishing'].fillna('Unknown')
 df['Property Type'] = df['Property Type'].fillna('Unknown')
 
-# 6. REMOVE OUTLIERS
+# 6. REMOVE OUTLIERS (this is the key fix!)
+#    Keep only properties between RM 100k and RM 10 million
+#    Keep only sizes between 200 and 10,000 sq.ft
 df = df[df['Price'] > 0]
 df = df[df['Size'] > 0]
+df = df[(df['Price'] >= 100000) & (df['Price'] <= 10000000)]
+df = df[(df['Size'] >= 200) & (df['Size'] <= 10000)]
 print(f"After removing outliers: {df.shape}")
 
-# 7. FEATURE ENGINEERING
+# 7. LOG-TRANSFORM PRICE (key improvement!)
+#    Price is heavily skewed — log makes it more normally distributed
+#    This helps linear models enormously
+df['Price_log'] = np.log1p(df['Price'])
+
+# 8. FEATURE ENGINEERING
 df['Price_per_sqft'] = df['Price'] / df['Size']
 
-# 8. ENCODE CATEGORICAL VARIABLES
+# 9. ENCODE CATEGORICAL VARIABLES
+#    Use Label Encoding for tree-based models
 from sklearn.preprocessing import LabelEncoder
 
 label_encoders = {}
@@ -55,29 +65,19 @@ for col in categorical_cols:
     label_encoders[col] = le
     print(f"{col}: {len(le.classes_)} unique values")
 
-# 9. PREPARE FINAL DATASET
+# 10. PREPARE FINAL DATASET
 feature_cols = ['Location_encoded', 'Rooms', 'Bathrooms', 'Car Parks',
                 'Property Type_encoded', 'Size', 'Furnishing_encoded']
 
 X = df[feature_cols]
-y = df['Price']
+y = df['Price_log']  # Using log-transformed price!
 
 print(f"\nFinal dataset:")
 print(f"  Features (X): {X.shape}")
 print(f"  Target (y): {y.shape}")
-print(f"\nPrice statistics:")
-print(y.describe())
+print(f"\nPrice statistics (original):")
+print(df['Price'].describe())
 
-# 10. SPLIT INTO TRAIN/TEST SETS (80% train, 20% test)
-from sklearn.model_selection import train_test_split
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
-
-print(f"\nTrain set: {X_train.shape[0]} samples")
-print(f"Test set:  {X_test.shape[0]} samples")
-
-# Save the processed data for the next step
+# Save
 df.to_csv('data/kl_property_cleaned.csv', index=False)
 print("\nSaved cleaned data to data/kl_property_cleaned.csv")
