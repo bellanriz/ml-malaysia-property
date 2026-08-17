@@ -1,6 +1,6 @@
 # Malaysia Property Price Prediction
 
-A machine learning regression project to predict property prices in Malaysia (Kuala Lumpur) using scikit-learn.
+A machine learning regression project to predict property prices in Malaysia (Kuala Lumpur) using scikit-learn and python.
 
 ## Dataset
 
