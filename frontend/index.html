@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KL Property Price Predictor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🏠 KL Property Price Predictor</h1>
+            <p class="subtitle">Predict property prices in Kuala Lumpur using Machine Learning</p>
+        </header>
+
+        <!-- Form -->
+        <main class="form-container">
+            <div class="form-grid">
+                <!-- Left Column -->
+                <div class="form-column">
+                    <h2>📝 Property Details</h2>
+
+                    <div class="form-group">
+                        <label for="location">📍 Location</label>
+                        <select id="location"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="property-type">🏢 Property Type</label>
+                        <select id="property-type"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="furnishing">🛋️ Furnishing</label>
+                        <select id="furnishing"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="size">📐 Size (sq.ft)</label>
+                        <input type="number" id="size" min="200" max="10000" value="1000" step="50">
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="form-column">
+                    <h2>🔢 Specifications</h2>
+
+                    <div class="form-group">
+                        <label for="rooms">🛏️ Bedrooms: <span id="rooms-value">3</span></label>
+                        <input type="range" id="rooms" min="1" max="10" value="3">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bathrooms">🚿 Bathrooms: <span id="bathrooms-value">2</span></label>
+                        <input type="range" id="bathrooms" min="1" max="10" value="2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="car-parks">🚗 Car Parks: <span id="car-parks-value">2</span></label>
+                        <input type="range" id="car-parks" min="0" max="5" value="2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predict Button -->
+            <div class="button-container">
+                <button id="predict-btn">🔮 Predict Price</button>
+            </div>
+        </main>
+
+        <!-- Results (hidden until prediction) -->
+        <div id="results" class="results hidden">
+            <div class="prediction-box">
+                <p class="result-label">Estimated Property Price</p>
+                <p class="result-price" id="predicted-price">RM 0</p>
+                <p class="result-model">Based on Random Forest model (R² = 0.94)</p>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <p class="metric-label">Price per sq.ft</p>
+                    <p class="metric-value" id="price-sqft">RM 0</p>
+                </div>
+                <div class="metric-card">
+                    <p class="metric-label">Monthly (30yr loan)</p>
+                    <p class="metric-value" id="monthly">RM 0</p>
+                </div>
+                <div class="metric-card">
+                    <p class="metric-label">Down Payment (10%)</p>
+                    <p class="metric-value" id="down-payment">RM 0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Built with Flask & scikit-learn | Dataset: Kaggle (Property Listings in KL)</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
