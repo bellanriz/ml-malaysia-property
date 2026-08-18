@@ -1,0 +1,362 @@
+========================================================================
+FRONTEND & BACKEND INTEGRATION NOTES
+========================================================================
+
+========================================================================
+ARCHITECTURE OVERVIEW
+========================================================================
+
+Frontend (HTML/CSS/JS)          Backend (Python/Flask)
+Port 3000                       Port 8000
+┌────────────────────┐          ┌────────────────────────┐
+│  index.html        │          │  api.py                │
+│  style.css         │  HTTP    │                        │
+│  app.js            │ ───────► │  /options → GET        │
+│                    │          │    Returns locations,   │
+│  User clicks       │          │    types, furnishings  │
+│  "Predict Price"   │ ───────► │                        │
+│                    │          │  /predict → POST       │
+│  Shows result      │ ◄─────── │    Returns price       │
+└────────────────────┘          └────────────────────────┘
+
+KEY RULE: Frontend and backend are SEPARATE servers.
+- Frontend serves static files (HTML, CSS, JS)
+- Backend runs Python code and ML model
+- They communicate via HTTP requests (fetch/API calls)
+
+========================================================================
+HOW TO RUN (ALWAYS NEED 2 TERMINALS)
+========================================================================
+
+Terminal 1 (Backend):
+    cd /Users/nabilaha/ml-malaysia-property
+    source venv/bin/activate
+    python backend/api.py
+    → Runs on http://localhost:8000
+
+Terminal 2 (Frontend):
+    cd /Users/nabilaha/ml-malaysia-property/frontend
+    python3 -m http.server 3000
+    → Runs on http://localhost:3000
+
+Open browser: http://localhost:3000 (NOT 8000!)
+
+========================================================================
+COMMON ISSUES & SOLUTIONS
+========================================================================
+
+------------------------------------------------------------------------
+ISSUE: "Cannot connect to API"
+------------------------------------------------------------------------
+Cause: Backend is not running, or wrong port
+Fix:
+  1. Make sure Terminal 1 has backend running (python backend/api.py)
+  2. Check app.js has correct API_URL matching the backend port
+  3. Both terminals must be running AT THE SAME TIME
+
+------------------------------------------------------------------------
+ISSUE: "Port 5000 is in use" (macOS)
+------------------------------------------------------------------------
+Cause: macOS AirPlay Receiver uses port 5000
+Fix:
+  Option A: Disable AirPlay Receiver
+    System Settings → General → AirDrop & Handoff → Turn off AirPlay Receiver
+  Option B: Use different port (we use 8000)
+    In api.py: app.run(port=8000)
+    In app.js: const API_URL = "http://localhost:8000"
+    IMPORTANT: Both files must use the SAME port number!
+
+------------------------------------------------------------------------
+ISSUE: "CORS error" in browser console
+------------------------------------------------------------------------
+Cause: Browser blocks requests between different ports for security
+Fix: flask-cors handles this
+    pip install flask-cors
+    In api.py:
+        from flask_cors import CORS
+        CORS(app)
+
+------------------------------------------------------------------------
+ISSUE: "404 Not Found" when visiting localhost:8000
+------------------------------------------------------------------------
+Cause: You're visiting the API directly in browser
+Fix: Visit http://localhost:3000 instead (that's your frontend)
+     The API (8000) is only for the frontend JS to call, not for you
+     to open directly
+
+------------------------------------------------------------------------
+ISSUE: Frontend shows but dropdowns are empty
+------------------------------------------------------------------------
+Cause: API is not running or returning errors
+Fix:
+  1. Open browser DevTools (Cmd+Option+I) → Console tab
+  2. Look for red error messages
+  3. Check Terminal 1 for Python errors
+  4. Test API directly: curl http://localhost:8000/options
+
+------------------------------------------------------------------------
+ISSUE: "Address already in use"
+------------------------------------------------------------------------
+Cause: Previous server still running on that port
+Fix: Kill it first
+    lsof -i :8000      (find the process)
+    kill -9 <PID>      (kill it using the PID number shown)
+    OR just close all terminal tabs and start fresh
+
+========================================================================
+BACKEND (api.py) - KEY CONCEPTS
+========================================================================
+
+------------------------------------------------------------------------
+Flask Basics
+------------------------------------------------------------------------
+
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)      # Create the app
+
+@app.route('/predict', methods=['POST'])    # Define a URL endpoint
+def predict():
+    data = request.json     # Get JSON body from frontend
+    # ... do stuff ...
+    return jsonify({...})   # Send JSON response back
+
+app.run(port=8000)         # Start the server
+
+------------------------------------------------------------------------
+HTTP Methods
+------------------------------------------------------------------------
+
+GET  = "Give me data" (no body needed)
+     Example: GET /options → returns list of locations
+
+POST = "Here's some data, process it" (has a JSON body)
+     Example: POST /predict with {location: "KLCC", size: 1200, ...}
+
+------------------------------------------------------------------------
+Common Syntax Errors in Python Flask
+------------------------------------------------------------------------
+
+WRONG: @app.route('/predict', method=['POST'])    ← "method" not "methods"
+RIGHT: @app.route('/predict', methods=['POST'])
+
+WRONG: return jsonify(predicted_price: 500000)    ← not valid Python
+RIGHT: return jsonify({'predicted_price': 500000})
+
+WRONG: data = request.JSON    ← capital JSON
+RIGHT: data = request.json    ← lowercase
+
+WRONG: app.run(port='8000')   ← string
+RIGHT: app.run(port=8000)     ← integer
+
+------------------------------------------------------------------------
+CORS (Cross-Origin Resource Sharing)
+------------------------------------------------------------------------
+
+When frontend (port 3000) calls backend (port 8000), the browser
+blocks it by default for security. This is called CORS.
+
+Solution:
+    pip install flask-cors
+    from flask_cors import CORS
+    CORS(app)   ← This allows ANY frontend to call your API
+
+Without CORS(app), you'll see this error in browser console:
+    "Access to fetch has been blocked by CORS policy"
+
+========================================================================
+FRONTEND - KEY CONCEPTS
+========================================================================
+
+------------------------------------------------------------------------
+HTML Structure
+------------------------------------------------------------------------
+
+<select id="location"></select>     ← Dropdown (options added by JS)
+<input type="range" id="rooms">    ← Slider
+<input type="number" id="size">    ← Number input
+<button id="predict-btn">          ← Button
+<div id="results" class="hidden">  ← Hidden until prediction
+
+KEY RULE: Every element you want to control with JS needs an "id"
+
+------------------------------------------------------------------------
+CSS Key Properties Used
+------------------------------------------------------------------------
+
+display: grid;                          ← Grid layout (columns)
+grid-template-columns: 1fr 1fr;         ← Two equal columns
+display: none;                          ← Hide element
+border-radius: 16px;                    ← Rounded corners
+box-shadow: 0 10px 40px rgba(0,0,0,0.1); ← Drop shadow
+linear-gradient(135deg, #667eea, #764ba2); ← Gradient
+transition: transform 0.2s;            ← Smooth animation
+
+------------------------------------------------------------------------
+CSS Common Syntax Errors
+------------------------------------------------------------------------
+
+WRONG: color: #1E3A5F     ← missing semicolon
+RIGHT: color: #1E3A5F;
+
+WRONG: .form-group, label  ← space means "label INSIDE .form-group"
+RIGHT: .form-group label   ← (if you want descendant selector)
+
+WRONG: margin-bottom; 1rem  ← semicolon instead of colon
+RIGHT: margin-bottom: 1rem;
+
+------------------------------------------------------------------------
+JavaScript (app.js) - Key Patterns
+------------------------------------------------------------------------
+
+1. FETCH DATA FROM API (GET request):
+
+    const response = await fetch("http://localhost:8000/options");
+    const data = await response.json();
+    // data is now a JS object you can use
+
+2. SEND DATA TO API (POST request):
+
+    const response = await fetch("http://localhost:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ location: "KLCC", size: 1200 })
+    });
+    const result = await response.json();
+
+3. GET VALUE FROM HTML ELEMENT:
+
+    document.getElementById("size").value        ← gets the text/number
+    parseInt(document.getElementById("size").value)  ← converts to integer
+
+4. SET TEXT IN HTML ELEMENT:
+
+    document.getElementById("predicted-price").textContent = "RM 1,200,000";
+
+5. SHOW/HIDE ELEMENTS:
+
+    document.getElementById("results").classList.remove("hidden");  ← show
+    document.getElementById("results").classList.add("hidden");     ← hide
+
+6. LISTEN FOR EVENTS:
+
+    document.getElementById("predict-btn").addEventListener("click", predictPrice);
+    slider.addEventListener("input", function() { ... });
+
+------------------------------------------------------------------------
+JavaScript Common Syntax Errors
+------------------------------------------------------------------------
+
+WRONG: document.getElementByid("size")     ← lowercase 'i' in Id
+RIGHT: document.getElementById("size")
+
+WRONG: const response = await fetch(url)   ← works only inside async function
+RIGHT: async function loadOptions() { const response = await fetch(url); }
+
+WRONG: JSON.stringify(body)    inside a non-async function without await
+RIGHT: Always use await with fetch, and put it inside an async function
+
+WRONG: headers: { Content-Type: "application/json" }   ← missing quotes
+RIGHT: headers: { "Content-Type": "application/json" }
+
+WRONG: body: JSON.stringify(body)   ← used in GET request
+RIGHT: body is only for POST/PUT requests, never for GET
+
+WRONG: const data = response.json()     ← missing await
+RIGHT: const data = await response.json()
+
+========================================================================
+API ENDPOINTS REFERENCE
+========================================================================
+
+------------------------------------------------------------------------
+GET /options
+------------------------------------------------------------------------
+What it does: Returns all dropdown options
+Called when: Page loads
+Request: No body needed
+Response:
+    {
+        "locations": ["Ampang, Kuala Lumpur", "Bangsar, Kuala Lumpur", ...],
+        "property_types": ["Apartment", "Bungalow", "Condominium", ...],
+        "furnishings": ["Fully Furnished", "Not Furnished", "Partly Furnished", "Unknown"]
+    }
+
+------------------------------------------------------------------------
+POST /predict
+------------------------------------------------------------------------
+What it does: Predicts property price
+Called when: User clicks "Predict Price" button
+Request body (JSON):
+    {
+        "location": "KLCC, Kuala Lumpur",
+        "property_type": "Condominium",
+        "furnishing": "Fully Furnished",
+        "size": 1200,
+        "rooms": 3,
+        "bathrooms": 2,
+        "car_parks": 2
+    }
+Response:
+    {
+        "predicted_price": 1250000,
+        "price_per_sqft": 1042,
+        "monthly_payment": 5000,
+        "down_payment": 125000
+    }
+
+========================================================================
+THE FULL DATA FLOW (What happens when user clicks Predict)
+========================================================================
+
+1. User fills in form and clicks "Predict Price"
+2. app.js reads all input values from HTML elements
+3. app.js creates a JSON object with those values
+4. app.js sends POST request to http://localhost:8000/predict
+5. Flask receives the request in api.py
+6. api.py looks up encoded values (KLCC → 45, Condominium → 12, etc.)
+7. api.py creates a DataFrame with the features
+8. api.py calls model.predict(features)
+9. Model returns log(price), api.py converts with np.expm1()
+10. api.py returns JSON response with price
+11. app.js receives the response
+12. app.js updates the HTML elements with the predicted price
+13. app.js removes "hidden" class from results div (shows it)
+
+========================================================================
+DEBUGGING TIPS
+========================================================================
+
+1. ALWAYS check browser DevTools console (Cmd+Option+I → Console)
+   - Red errors = something failed
+   - Look for "CORS", "404", "TypeError", "Connection refused"
+
+2. Test API independently with curl:
+   curl http://localhost:8000/options
+   curl -X POST http://localhost:8000/predict \
+     -H "Content-Type: application/json" \
+     -d '{"location":"KLCC, Kuala Lumpur","property_type":"Condominium","furnishing":"Fully Furnished","size":1200,"rooms":3,"bathrooms":2,"car_parks":2}'
+
+3. Check Flask terminal for errors (Python tracebacks)
+
+4. If frontend changes don't appear:
+   - Hard refresh browser: Cmd+Shift+R (clears cache)
+
+5. If API changes don't take effect:
+   - Flask auto-reloads with debug=True
+   - But if it crashes, you need to restart manually
+
+========================================================================
+FILE SUMMARY
+========================================================================
+
+backend/api.py       → Python web server, serves ML predictions
+frontend/index.html  → Page structure (what elements exist)
+frontend/style.css   → Visual design (how elements look)
+frontend/app.js      → Logic (what happens on interactions)
+
+Rule: HTML = structure, CSS = style, JS = behavior
+Rule: Frontend shows things, Backend processes things
+Rule: They talk via HTTP (fetch in JS → Flask routes in Python)
+
+========================================================================
