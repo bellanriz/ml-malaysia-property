@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000";
+const API_URL = "http://localhost:8000";
 
 // Format number with commas: 1250000 → "1,250,000"
 function formatNumber(num) {

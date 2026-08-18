@@ -67,6 +67,6 @@ def get_options():
 
 
 if __name__ == '__main__':
-    print("API running at http://localhost:5000")
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    print("API running at http://localhost:8000")
+    app.run(debug=True, port=8000, host='0.0.0.0')
 
