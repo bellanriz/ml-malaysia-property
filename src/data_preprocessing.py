@@ -13,12 +13,13 @@ df = pd.read_csv('data/kl_property.csv')
 print(f"Original shape: {df.shape}")
 
 # 1. CLEAN THE PRICE COLUMN: "RM 1,250,000" → 1250000.0
-df['Price'] = df['Price'].replace('[^0-9.]', '', regex=True)
-df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
+df['Price'] = df['Price'].astype(str).str.replace(',', '', regex=False)
+df['Price'] = df['Price'].str.extract(r'(\d+\.?\d*)').astype(float)
 
 # 2. CLEAN THE SIZE COLUMN: "Built-up : 1,335 sq. ft." → 1335.0
-df['Size'] = df['Size'].replace('[^0-9.]', '', regex=True)
-df['Size'] = pd.to_numeric(df['Size'], errors='coerce')
+#    First remove commas, then extract the first number (digits and optional decimal)
+df['Size'] = df['Size'].astype(str).str.replace(',', '', regex=False)
+df['Size'] = df['Size'].str.extract(r'(\d+\.?\d*)').astype(float)
 
 # 3. CLEAN THE ROOMS COLUMN: "3+1" → 3
 df['Rooms'] = df['Rooms'].astype(str).str.extract(r'(\d+)').astype(float)

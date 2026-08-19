@@ -79,19 +79,18 @@ st.divider()
 # ============================================================
 with st.sidebar:
     st.header("📊 About This Project")
-    st.write("""
+    st.write(f"""
     This app predicts property prices in Kuala Lumpur
-    using a machine learning model trained on **{:,}** 
+    using a machine learning model trained on **{len(df):,}**
     real property listings.
-    """.format(len(df)))
+    """)
 
     st.divider()
 
     st.subheader("🤖 Model Info")
     st.write(f"**Algorithm:** {type(model).__name__}")
-    st.write(f"**Features:** 7")
+    st.write("**Features:** 7")
     st.write(f"**Training Data:** {len(df):,} properties")
-
 
     st.divider()
 
